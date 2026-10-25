@@ -21,7 +21,7 @@ jobs:
         run: npm run build
 
       - name: Package Windows installer and portable zip
-        run: npx electron-builder --win --x64
+        run: npx electron-builder --win --x64 --publish never
 
       - name: Smoke test the packaged app
         shell: pwsh
