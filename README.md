@@ -11,8 +11,8 @@ proper written lessons for the gaps it found.
 No accounts, no sync server, no telemetry, no videos. Everything is stored locally; the only network traffic is
 the prompt sent to the AI provider you choose.
 
-**[Download the latest build](https://github.com/KThomasMurrayL/learner/releases/latest)** — Windows portable zip
-and macOS DMG.
+**[Download the latest build](https://github.com/KThomasMurrayL/learner/releases/latest)** — Windows installer or
+portable zip, and the macOS DMG.
 
 ---
 
