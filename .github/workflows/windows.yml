@@ -1,0 +1,56 @@
+name: Windows build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript and renderer
+        run: npm run build
+
+      - name: Package Windows installer and portable zip
+        run: npx electron-builder --win --x64
+
+      - name: Smoke test the packaged app
+        shell: pwsh
+        run: |
+          $exe = "dist\win-unpacked\Learner.exe"
+          if (-not (Test-Path $exe)) { throw "Packaged executable not found at $exe" }
+          $proc = Start-Process -FilePath $exe -ArgumentList "--remote-debugging-port=9222" -PassThru
+          $targets = $null
+          for ($i = 0; $i -lt 30; $i++) {
+            Start-Sleep -Seconds 1
+            try {
+              $targets = Invoke-RestMethod -Uri "http://127.0.0.1:9222/json/list" -TimeoutSec 2
+              if ($targets.Count -gt 0) { break }
+            } catch {}
+          }
+          if (-not $targets -or $targets.Count -eq 0) {
+            Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+            throw "The packaged app started but never exposed a renderer."
+          }
+          Write-Host "Renderer loaded:" $targets[0].title $targets[0].url
+          Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: learner-windows
+          path: |
+            dist/*.exe
+            dist/*.zip
+          if-no-files-found: error

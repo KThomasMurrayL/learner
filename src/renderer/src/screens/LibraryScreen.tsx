@@ -47,7 +47,7 @@ export function LibraryScreen({ onOpenSession, onHome }: LibraryScreenProps) {
           <h1>Everything you’ve studied</h1>
           <p className="page-sub">
             {sessions.length
-              ? `${sessions.length} ${sessions.length === 1 ? 'quiz' : 'quizzes'} saved on this Mac.`
+              ? `${sessions.length} ${sessions.length === 1 ? 'quiz' : 'quizzes'} saved on this computer.`
               : 'Saved quizzes and lessons will appear here.'}
           </p>
         </div>

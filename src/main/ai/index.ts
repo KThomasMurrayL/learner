@@ -1,4 +1,3 @@
-import { execFile } from 'node:child_process'
 import type {
   Difficulty,
   LessonRequest,
@@ -10,7 +9,7 @@ import type {
   TopicSuggestion
 } from '@shared/types'
 import { anthropicChat } from './anthropic'
-import { cliChat, resolveBinary } from './cli'
+import { cliChat, listOpencodeModels, resolveBinary } from './cli'
 import { AiError, wrapFetchError } from './core'
 import type { AiRequest, AiRuntime, DeltaHandler } from './core'
 import { demoChat, demoGrade, demoLesson, demoQuiz, demoSuggestTopics } from './demo'
@@ -176,19 +175,7 @@ export async function listModels(runtime: AiRuntime): Promise<string[]> {
   if (provider.kind === 'demo') return ['demo']
   if (provider.kind === 'cli') {
     if (provider.cliKind !== 'opencode') return []
-    const bin = resolveBinary('opencode')
-    if (!bin) throw new AiError('The OpenCode CLI was not found.')
-    const output = await new Promise<string>((resolve, reject) => {
-      execFile(bin, ['models'], { timeout: 20_000, maxBuffer: 4 * 1024 * 1024 }, (error, stdout) => {
-        if (error) reject(new AiError('Could not list OpenCode models.', error.message))
-        else resolve(stdout)
-      })
-    })
-    return output
-      .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line.includes('/'))
-      .slice(0, 400)
+    return listOpencodeModels()
   }
 
   if (provider.kind === 'anthropic') {
@@ -232,7 +219,7 @@ export function providerSummary(runtime: AiRuntime): { configured: boolean; summ
       return {
         configured: false,
         summary: `${name} not found`,
-        detail: `The ${name} CLI is not on this Mac. Install it or switch to an API provider in Settings.`
+        detail: `The ${name} CLI is not on this computer. Install it or switch to an API provider in Settings.`
       }
     }
     return { configured: true, summary: `${name} · ${model}`, detail: `Using your local ${name} sign-in.` }

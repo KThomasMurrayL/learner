@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { CliKind, ProviderKind, TestResult, ThemeMode } from '@shared/types'
 import { api, errorMessage } from '../lib/api'
+import { shortcut } from '../lib/platform'
 import { useApp } from '../state/AppContext'
 import {
   IconAlert,
@@ -27,7 +28,7 @@ const PROVIDERS: ProviderOption[] = [
     kind: 'cli',
     cliKind: 'claude',
     title: 'Claude subscription',
-    subtitle: 'Uses the Claude Code sign-in already on this Mac.',
+    subtitle: 'Uses the Claude Code sign-in already on this computer.',
     badge: 'No key'
   },
   {
@@ -336,7 +337,7 @@ export function SettingsScreen() {
                       </button>
                     ) : null}
                   </div>
-                  <span className="field-hint">Encrypted with the macOS keychain and stored on this Mac only.</span>
+                  <span className="field-hint">Encrypted with your operating system's secure storage and saved only locally.</span>
                 </label>
               </div>
               <div className="field-row two">
@@ -442,7 +443,7 @@ export function SettingsScreen() {
                     ) : null}
                   </div>
                   <span className="field-hint">
-                    Sent only to the endpoint above. Encrypted with the macOS keychain when saved.
+                    Sent only to the endpoint above. Encrypted with your operating system's secure storage when saved.
                   </span>
                 </label>
               </div>
@@ -540,7 +541,7 @@ export function SettingsScreen() {
             </p>
           </div>
           <button type="button" className="ghost-button" onClick={() => void api.revealDataFile()}>
-            Show in Finder
+            Show in folder
           </button>
         </div>
         <div className="privacy-points">
@@ -551,12 +552,12 @@ export function SettingsScreen() {
             <IconCheck size={14} /> Requests go only to the provider you chose.
           </span>
           <span>
-            <IconCheck size={14} /> Version {version || '1.0.0'} · runs entirely on this Mac.
+            <IconCheck size={14} /> Version {version || '1.1.0'} · runs entirely on your computer.
           </span>
         </div>
         <div className="keyboard-note">
           <IconArrowRight size={14} />
-          Keyboard: <kbd>⌘N</kbd> new quiz · <kbd>⌘,</kbd> settings · <kbd>1</kbd>–<kbd>4</kbd> pick an answer ·{' '}
+          Keyboard: <kbd>{shortcut('N')}</kbd> new quiz · <kbd>{shortcut(',')}</kbd> settings · <kbd>1</kbd>–<kbd>4</kbd> pick an answer ·{' '}
           <kbd>U</kbd> don’t know.
         </div>
       </section>

@@ -103,6 +103,7 @@ export interface Session {
 
 export type ProviderKind = 'cli' | 'anthropic' | 'openai' | 'demo'
 export type CliKind = 'claude' | 'opencode'
+export type RuntimePlatform = 'mac' | 'windows' | 'linux' | 'other'
 
 export interface ProviderSettings {
   kind: ProviderKind
@@ -178,6 +179,7 @@ export type ProviderPatch = Partial<
 > & { apiKey?: string | null; theme?: ThemeMode }
 
 export interface LearnerApi {
+  platform: RuntimePlatform
   getState: () => Promise<AppState>
   saveSettings: (patch: ProviderPatch) => Promise<AppState>
   providerStatus: () => Promise<ProviderStatus>

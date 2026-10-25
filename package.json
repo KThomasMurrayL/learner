@@ -1,6 +1,6 @@
 {
   "name": "learner",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Learn anything: AI-generated quizzes, honest marking, and written lessons. Fully local.",
   "main": "./out/main/index.js",
   "author": "eso",
@@ -12,9 +12,13 @@
     "build": "electron-vite build",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "dist": "electron-vite build && electron-builder --mac --dir",
-    "dmg": "electron-vite build && electron-builder --mac"
+    "dist:mac": "electron-vite build && electron-builder --mac --dir",
+    "dmg": "electron-vite build && electron-builder --mac",
+    "dist:win": "electron-vite build && electron-builder --win --x64",
+    "dist:win:zip": "electron-vite build && electron-builder --win zip --x64"
   },
   "dependencies": {
+    "cross-spawn": "^7.0.6",
     "katex": "^0.19.1",
     "mermaid": "^12.2.0",
     "react": "^19.3.1",
@@ -25,6 +29,7 @@
     "remark-math": "^6.0.0"
   },
   "devDependencies": {
+    "@types/cross-spawn": "^6.0.6",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -54,7 +59,33 @@
       "identity": null,
       "target": [
         "dmg"
+      ],
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "win": {
+      "icon": "build/icon.png",
+      "artifactName": "${productName}-${version}-win-${arch}.${ext}",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Learner"
     }
   }
 }

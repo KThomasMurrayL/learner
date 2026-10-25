@@ -1,7 +1,24 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { LearnerApi, LessonEvent, ProviderPatch, QuizConfig, ShortAnswerItem } from '@shared/types'
+import type {
+  LearnerApi,
+  LessonEvent,
+  ProviderPatch,
+  QuizConfig,
+  RuntimePlatform,
+  ShortAnswerItem
+} from '@shared/types'
+
+const platform: RuntimePlatform =
+  process.platform === 'darwin'
+    ? 'mac'
+    : process.platform === 'win32'
+      ? 'windows'
+      : process.platform === 'linux'
+        ? 'linux'
+        : 'other'
 
 const api: LearnerApi = {
+  platform,
   getState: () => ipcRenderer.invoke('state:get'),
   saveSettings: (patch: ProviderPatch) => ipcRenderer.invoke('settings:save', patch),
   providerStatus: () => ipcRenderer.invoke('provider:status'),

@@ -292,7 +292,11 @@ kbd {
 }
 
 .sidebar-top {
-  padding: 54px 6px 16px;
+  padding: 24px 6px 16px;
+}
+
+:root[data-platform='mac'] .sidebar-top {
+  padding-top: 54px;
 }
 
 .brand {

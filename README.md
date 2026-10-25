@@ -1,18 +1,24 @@
 # Learner
 
-A local macOS app for learning anything the honest way: **quiz first, then teach what you missed.**
+A local desktop app for learning anything the honest way: **quiz first, then teach what you missed.**
+Runs on macOS and Windows.
 
 You type a subject, pick the topics worth testing, and choose how many questions you want. The app writes a
 diagnostic quiz, opens it, and gives you a dedicated **“I don’t know this”** button so you never have to guess.
 When you finish, it marks every answer — multiple choice locally, written answers for meaning — and then writes
 proper written lessons for the gaps it found.
 
-No accounts, no sync server, no telemetry, no videos. Everything is stored on your Mac; the only network traffic
-is the prompt sent to the AI provider you choose.
+No accounts, no sync server, no telemetry, no videos. Everything is stored locally; the only network traffic is
+the prompt sent to the AI provider you choose.
+
+**[Download the latest build](https://github.com/KThomasMurrayL/learner/releases/latest)** — Windows portable zip
+and macOS DMG.
 
 ---
 
 ## Run it
+
+Requires Node.js 20+.
 
 ```bash
 npm install
@@ -22,17 +28,25 @@ npm run dev
 Build a double-clickable app:
 
 ```bash
-npm run dist     # → dist/mac-arm64/Learner.app
-npm run dmg      # → dist/Learner-1.0.0-arm64.dmg
+npm run dist          # → dist/mac-arm64/Learner.app
+npm run dmg           # → dist/Learner-<version>-arm64.dmg
+npm run dist:win      # Windows installer + portable zip (run this on Windows)
+npm run dist:win:zip  # Windows portable zip (can build from macOS)
 ```
 
-`npm run dev` and a packaged build both run the UI from local files (`file://`), not from a web server.
+`npm run dev` and every packaged build run the UI from local files (`file://`), not from a web server.
+
+### Windows build
+
+Download `Learner-<version>-win-x64.zip`, unzip it anywhere, and run `Learner.exe`. The app is unsigned, so
+SmartScreen may ask you to confirm: **More info → Run anyway**. It ships as a portable app rather than an installer
+because the released zip is built on macOS; `npm run dist:win` on a Windows machine produces the NSIS installer.
 
 ---
 
 ## Connect an AI provider
 
-Open **Settings** (⌘,) and choose one:
+Open **Settings** (⌘, on macOS, Ctrl+, on Windows) and choose one:
 
 | Provider | What it uses | Needs a key? |
 | --- | --- | --- |
@@ -44,10 +58,14 @@ Open **Settings** (⌘,) and choose one:
 
 The subscription options are the easiest if you already use Claude Code or OpenCode. Learner shells out to
 `claude -p` / `opencode run` in the background, so your existing sign-in does the work and no key is stored in the
-app. Use **Test connection** to confirm it works.
+app. Use **Test connection** to confirm it works. Prompts are piped over stdin, not placed on the command line.
 
-API keys are encrypted with macOS `safeStorage` (Keychain) and stored only in the app’s data file. For local
-servers such as Ollama, leave the key empty and point the base URL at `http://localhost:11434/v1`.
+API keys are encrypted with the operating system's secure storage (`safeStorage`: Keychain on macOS, DPAPI on
+Windows) and stored only in the app’s data file. For local servers such as Ollama, leave the key empty and point
+the base URL at `http://localhost:11434/v1`.
+
+On Windows, subscription mode needs the `claude` or `opencode` command installed and available on `PATH`
+(native installer or npm global install). API-key and Demo modes have no extra requirements.
 
 ---
 
@@ -72,9 +90,10 @@ Lessons start writing automatically after marking, in the background, while you 
 
 ## Where things live
 
-- Quizzes, answers and lessons: `~/Library/Application Support/Learner/learner-data.json`
+- **macOS:** `~/Library/Application Support/Learner/learner-data.json`
+- **Windows:** `%APPDATA%\Learner\learner-data.json`
 - Encrypted API keys: the same file, under `settings.provider.keys`
-- Settings → **Data & privacy → Show in Finder** opens the file.
+- Settings → **Data & privacy → Show in folder** opens the file.
 
 The file is plain JSON for lessons and answers, so it is easy to back up or inspect. Streaming lessons are
 resumable: if the app closes mid-lesson, the lesson is marked as interrupted and can be rewritten with one click.
@@ -87,6 +106,7 @@ resumable: if the app closes mid-lesson, the lesson is marked as interrupted and
 src/
   main/                 Electron main process (no renderer network access needed)
     ai/                 provider adapters: Anthropic API, OpenAI-compatible, Claude/OpenCode CLIs, demo
+    ai/cli.ts           cross-platform CLI resolution (PATH/PATHEXT/where, .cmd shims, stdin prompts)
     ai/prompts.ts       the examiner, grader and tutor prompts
     ai/normalize.ts     forgiving parsing of model JSON into the domain model
     store.ts            atomic local JSON store + safeStorage key encryption
@@ -95,27 +115,28 @@ src/
   renderer/             React + TypeScript UI
     screens/            Home, Quiz, Results, Lessons, Library, Settings
     components/         Markdown (KaTeX + Mermaid), Sidebar, icons, toasts
-    lib/                local grading, scoring, formatting
+    lib/                local grading, scoring, formatting, platform helpers
   shared/types.ts       domain types shared by main, preload and renderer
 ```
 
 - Context isolation is on, `nodeIntegration` is off, and the renderer never sees an API key.
-- Long generations are cancellable and time-limited.
+- Long generations are cancellable and time-limited; CLI child processes are killed as a process tree on Windows.
 - Written answers are graded in one batched request; lessons are generated one at a time so you can start reading
   the first while the rest are written.
+- The window uses macOS traffic lights on macOS and the native title bar everywhere else.
 
 ---
 
 ## Keyboard
 
-| Key | Action |
-| --- | --- |
-| `⌘N` | New quiz |
-| `⌘,` | Settings |
-| `1`–`4` | Pick an answer |
-| `U` | “I don’t know this” |
-| `←` / `→` | Move between questions |
-| `Enter` | Next question |
+| macOS | Windows | Action |
+| --- | --- | --- |
+| `⌘N` | `Ctrl+N` | New quiz |
+| `⌘,` | `Ctrl+,` | Settings |
+| `1`–`4` | `1`–`4` | Pick an answer |
+| `U` | `U` | “I don’t know this” |
+| `←` / `→` | `←` / `→` | Move between questions |
+| `Enter` | `Enter` | Next question |
 
 ---
 

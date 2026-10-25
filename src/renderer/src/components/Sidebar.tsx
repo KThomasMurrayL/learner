@@ -1,4 +1,5 @@
 import { useApp } from '../state/AppContext'
+import { shortcut } from '../lib/platform'
 import { IconBook, IconLibrary, IconLogo, IconSettings, IconSpark } from './Icons'
 
 export type NavKey = 'home' | 'library' | 'settings'
@@ -36,11 +37,11 @@ export function Sidebar({ active, onNavigate, onOpenSession }: SidebarProps): Re
         type="button"
         className="new-quiz-button"
         onClick={() => onNavigate('home')}
-        title="New quiz (⌘N)"
+        title={`New quiz (${shortcut('N')})`}
       >
         <span className="new-quiz-plus">+</span>
         New quiz
-        <kbd>⌘N</kbd>
+        <kbd>{shortcut('N')}</kbd>
       </button>
 
       <nav className="nav">

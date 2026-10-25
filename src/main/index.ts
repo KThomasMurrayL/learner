@@ -1,5 +1,5 @@
 import { app, BrowserWindow, Menu, ipcMain, shell } from 'electron'
-import type { MenuItemConstructorOptions } from 'electron'
+import type { BrowserWindowConstructorOptions, MenuItemConstructorOptions } from 'electron'
 import { join } from 'node:path'
 import type { LessonRequest, ProviderPatch, QuizConfig, ShortAnswerItem } from '@shared/types'
 import {
@@ -22,6 +22,7 @@ import {
 } from './store'
 
 app.setName('Learner')
+const isMac = process.platform === 'darwin'
 
 const singleInstance = app.requestSingleInstanceLock()
 if (!singleInstance) {
@@ -39,23 +40,32 @@ app.on('second-instance', () => {
 })
 
 function createWindow(): void {
-  mainWindow = new BrowserWindow({
+  const windowOptions: BrowserWindowConstructorOptions = {
     width: 1280,
     height: 880,
     minWidth: 920,
     minHeight: 620,
     show: false,
     backgroundColor: '#F6F4EF',
-    titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 18, y: 22 },
     title: 'Learner',
+    ...(isMac
+      ? {
+          titleBarStyle: 'hiddenInset' as const,
+          trafficLightPosition: { x: 18, y: 22 }
+        }
+      : {
+          // Windows and Linux keep their native title bar.
+          autoHideMenuBar: true
+        }),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false
     }
-  })
+  }
+
+  mainWindow = new BrowserWindow(windowOptions)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
@@ -89,7 +99,12 @@ function sendNavigation(target: 'home' | 'settings'): void {
 }
 
 function buildMenu(): void {
-  const isMac = process.platform === 'darwin'
+  const settingsItem: MenuItemConstructorOptions = {
+    label: 'AI provider and app settings',
+    accelerator: 'CmdOrCtrl+,',
+    click: () => sendNavigation('settings')
+  }
+
   const template: MenuItemConstructorOptions[] = [
     ...(isMac ? [{ role: 'appMenu' as const }] : []),
     {
@@ -100,7 +115,14 @@ function buildMenu(): void {
           accelerator: 'CmdOrCtrl+N',
           click: () => sendNavigation('home')
         },
-        ...(isMac ? [] : [{ type: 'separator' as const }, { role: 'quit' as const }])
+        ...(isMac
+          ? []
+          : [
+              { type: 'separator' as const },
+              settingsItem,
+              { type: 'separator' as const },
+              { role: 'quit' as const }
+            ])
       ]
     },
     { role: 'editMenu' },
@@ -117,17 +139,8 @@ function buildMenu(): void {
         { role: 'togglefullscreen' }
       ]
     },
-    {
-      label: 'Settings',
-      submenu: [
-        {
-          label: 'AI provider and app settings',
-          accelerator: 'CmdOrCtrl+,',
-          click: () => sendNavigation('settings')
-        }
-      ]
-    },
-    { role: 'windowMenu' }
+    ...(isMac ? [{ label: 'Settings', submenu: [settingsItem] }] : []),
+    ...(isMac ? [{ role: 'windowMenu' as const }] : [])
   ]
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
@@ -262,6 +275,7 @@ function registerIpc(): void {
 
 app.whenReady().then(() => {
   if (!singleInstance) return
+  if (process.platform === 'win32') app.setAppUserModelId('com.eso.learner')
   registerIpc()
   buildMenu()
   createWindow()
